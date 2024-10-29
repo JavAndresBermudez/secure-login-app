@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Exitoso</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-card">
+            <h1>¡Bienvenido!</h1>
+            <div class="success-message">
+                <p>Has iniciado sesión correctamente</p>
+                <p class="user-info">Usuario: <span id="username"></span></p>
+            </div>
+            <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <script>
+        // Obtener el usuario de sessionStorage
+        window.onload = function() {
+            const username = sessionStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('username').textContent = username;
+        };
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
