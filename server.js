@@ -1,59 +1,44 @@
 const express = require('express');
 const https = require('https');
+const fs = require('fs');
 const path = require('path');
-const securityConfig = require('./src/config/security');
-const authRoutes = require('./src/routes/auth');
-const sslPinning = require('./src/middleware/sslPinning');
 
 const app = express();
 
-// Middleware de seguridad
+// Middleware para parsear JSON
+app.use(express.json());
+
+// Servir archivos estáticos
+app.use(express.static(path.join(__dirname, 'src/public')));
+
+// Configuración de CORS para desarrollo
 app.use((req, res, next) => {
-  // Agregar headers de seguridad
-  Object.entries(securityConfig.getSecurityHeaders()).forEach(([header, value]) => {
-    res.setHeader(header, value);
-  });
-  next();
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
 });
 
-app.use(express.json({
-  limit: '10kb' // Limitar tamaño de payload
-}));
-
-app.use(express.static(path.join(__dirname, 'src/public'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
-    }
-  }
-}));
-
-// Aplicar SSL Pinning
-app.use(sslPinning);
-
-// Rutas
+// Importar y usar las rutas de autenticación
+const authRoutes = require('./src/routes/auth');
 app.use('/api', authRoutes);
 
-// Manejo de errores
+// Manejador de errores global
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({
-    error: 'Error interno del servidor'
-  });
+    console.error('Error:', err);
+    res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+    });
 });
+
+// Configuración SSL
+const sslOptions = {
+    key: fs.readFileSync(path.join(__dirname, 'certs/server.key')),
+    cert: fs.readFileSync(path.join(__dirname, 'certs/server.crt'))
+};
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
-const server = https.createServer(securityConfig.getSSLOptions(), app);
-
-server.listen(PORT, () => {
-  console.log(`Servidor seguro corriendo en https://localhost:${PORT}`);
-});
-
-// Manejo de señales de terminación
-process.on('SIGTERM', () => {
-  server.close(() => {
-    console.log('Servidor terminado gracefully');
-    process.exit(0);
-  });
+https.createServer(sslOptions, app).listen(PORT, () => {
+    console.log(`Servidor corriendo en https://localhost:${PORT}`);
 });
