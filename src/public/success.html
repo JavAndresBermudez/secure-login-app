@@ -12,25 +12,25 @@
             <h1>¡Bienvenido!</h1>
             <div class="success-message">
                 <p>Has iniciado sesión correctamente</p>
-                <p class="user-info">Usuario: <span id="username"></span></p>
+                <p>Usuario: <span id="username"></span></p>
             </div>
             <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
         </div>
     </div>
 
     <script>
-        // Obtener el usuario de sessionStorage
-        window.onload = function() {
-            const username = sessionStorage.getItem('username');
-            if (!username) {
-                window.location.href = '/';
-                return;
-            }
-            document.getElementById('username').textContent = username;
-        };
+        // Mostrar el usuario
+        document.getElementById('username').textContent = 
+            sessionStorage.getItem('username') || 'Invitado';
 
+        // Función de cierre de sesión
         function logout() {
             sessionStorage.clear();
+            window.location.href = '/';
+        }
+
+        // Verificar si hay sesión
+        if (!sessionStorage.getItem('username')) {
             window.location.href = '/';
         }
     </script>
